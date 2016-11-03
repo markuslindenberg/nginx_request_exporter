@@ -122,10 +122,13 @@ func main() {
 					Name:      metric.Name,
 					Help:      fmt.Sprintf("Nginx request log value for %s", metric.Name),
 				}, labels.Names)
-				err = prometheus.Register(collector)
-				if err != nil {
-					log.Error(err)
-					continue
+				if err := prometheus.Register(collector); err != nil {
+					if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+						collector = are.ExistingCollector.(*prometheus.HistogramVec)
+					} else {
+						log.Error(err)
+						continue
+					}
 				}
 				collector.(*prometheus.HistogramVec).WithLabelValues(labels.Values...).Observe(metric.Value)
 			}
