@@ -117,14 +117,18 @@ func main() {
 			}
 			for _, metric := range metrics {
 				var collector prometheus.Collector
-				collector, err = prometheus.RegisterOrGet(prometheus.NewHistogramVec(prometheus.HistogramOpts{
+				collector = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 					Namespace: namespace,
 					Name:      metric.Name,
 					Help:      fmt.Sprintf("Nginx request log value for %s", metric.Name),
-				}, labels.Names))
-				if err != nil {
-					log.Error(err)
-					continue
+				}, labels.Names)
+				if err := prometheus.Register(collector); err != nil {
+					if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
+						collector = are.ExistingCollector.(*prometheus.HistogramVec)
+					} else {
+						log.Error(err)
+						continue
+					}
 				}
 				collector.(*prometheus.HistogramVec).WithLabelValues(labels.Values...).Observe(metric.Value)
 			}
