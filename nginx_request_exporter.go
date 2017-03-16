@@ -22,6 +22,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"strconv"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/common/log"
@@ -38,8 +39,19 @@ func main() {
 		listenAddress = flag.String("web.listen-address", ":9147", "Address to listen on for web interface and telemetry.")
 		metricsPath   = flag.String("web.telemetry-path", "/metrics", "Path under which to expose metrics.")
 		syslogAddress = flag.String("nginx.syslog-address", "127.0.0.1:9514", "Syslog listen address/socket for Nginx.")
+		metricBuckets = flag.String("histogram.buckets", ".005,.01,.025,.05,.1,.25,.5,1,2.5,5,10", "Buckets for the Prometheus histogram.")
 	)
 	flag.Parse()
+
+	// Parse the buckets
+	var floatBuckets []float64
+	for _, str := range strings.Split(*metricBuckets, ",") {
+		bucket, err := strconv.ParseFloat(strings.TrimSpace(str), 64)
+		if err != nil {
+			log.Fatal(err)
+		}
+		floatBuckets = append(floatBuckets, bucket)
+	}
 
 	// Listen to signals
 	sigchan := make(chan os.Signal, 1)
@@ -121,6 +133,7 @@ func main() {
 					Namespace: namespace,
 					Name:      metric.Name,
 					Help:      fmt.Sprintf("Nginx request log value for %s", metric.Name),
+					Buckets:   floatBuckets,
 				}, labels.Names)
 				if err := prometheus.Register(collector); err != nil {
 					if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
