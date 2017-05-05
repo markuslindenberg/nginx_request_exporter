@@ -4,10 +4,21 @@ This is a [Prometheus](https://prometheus.io/) exporter for [Nginx](http://nginx
 
 In contrast to existing exporters nginx_request_exporter does *not* scrape the [stub status module](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html) for server status but records statistics for HTTP requests.
 
+By default nginx_request_exporter listens on port 9147 for HTTP requests.
+
 ## Installation
+
+### Using `go get`
 
 ```
 go get github.com/markuslindenberg/nginx_request_exporter
+```
+
+### Using Docker
+
+```
+docker build -t nginx_request_exporter .
+docker run --rm -p 9147:9147 -p 9514:9514/udp nginx_request_exporter
 ```
 
 ## Configuration
