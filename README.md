@@ -18,7 +18,7 @@ go get github.com/markuslindenberg/nginx_request_exporter
 
 ```
 docker pull markuslindenberg/nginx_request_exporter
-docker run --rm -p 9147:9147 -p 9514:9514/udp nginx_request_exporter
+docker run --rm -p 9147:9147 -p 9514:9514/udp markuslindenberg/nginx_request_exporter
 ```
 
 ## Configuration
